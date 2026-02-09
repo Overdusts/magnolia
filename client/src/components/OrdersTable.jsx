@@ -26,22 +26,25 @@ function getSymbol(instId) {
   return instId.split('-')[0];
 }
 
-export default function TradesTable({ trades, compact }) {
-  const items = compact ? trades.slice(0, 5) : trades;
+function formatState(state) {
+  if (!state) return '—';
+  return state.replace(/_/g, ' ');
+}
 
+export default function OrdersTable({ orders }) {
   return (
     <div className="card">
       <div className="card-header">
         <h2 className="card-title">
-          Recent Trades
-          <span className="badge">{trades.length}</span>
+          Order History
+          <span className="badge">{orders.length}</span>
         </h2>
       </div>
       <div className="card-body">
-        {trades.length === 0 ? (
+        {orders.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">~</div>
-            No recent trades
+            No order history
           </div>
         ) : (
           <div className="table-wrap">
@@ -51,35 +54,40 @@ export default function TradesTable({ trades, compact }) {
                   <th>Time</th>
                   <th>Instrument</th>
                   <th>Side</th>
+                  <th>Type</th>
                   <th>Price</th>
                   <th>Size</th>
-                  {!compact && <th>Fee</th>}
-                  <th>Role</th>
+                  <th>Filled</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((trade, i) => {
-                  const side = trade.side;
+                {orders.map((order, i) => {
+                  const side = order.side;
                   const sideClass = side === 'buy' ? 'buy' : 'sell';
+                  const stateClass = (order.state || '').toLowerCase().replace(/ /g, '_');
 
                   return (
-                    <tr key={trade.tradeId || i}>
-                      <td className="mono">{formatTime(trade.ts)}</td>
+                    <tr key={order.orderId || i}>
+                      <td className="mono">{formatTime(order.createTime || order.cTime)}</td>
                       <td>
                         <div className="inst-cell">
-                          <div className="inst-icon">{getSymbol(trade.instId).slice(0, 2)}</div>
-                          <span className="inst-name mono">{trade.instId}</span>
+                          <div className="inst-icon">{getSymbol(order.instId).slice(0, 2)}</div>
+                          <span className="inst-name mono">{order.instId}</span>
                         </div>
                       </td>
                       <td>
                         <span className={`side-chip ${sideClass}`}>{side}</span>
                       </td>
-                      <td className="mono">{fmt(trade.price, 4)}</td>
-                      <td className="mono">{fmt(trade.size, 4)}</td>
-                      {!compact && <td className="mono">{fmt(trade.fee, 4)}</td>}
+                      <td style={{ textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
+                        {order.orderType || '—'}
+                      </td>
+                      <td className="mono">{fmt(order.price, 4)}</td>
+                      <td className="mono">{fmt(order.size, 4)}</td>
+                      <td className="mono">{fmt(order.filledSize || order.accFillSz, 4)}</td>
                       <td>
-                        <span className={`role-chip ${trade.execType === 'M' ? 'maker' : 'taker'}`}>
-                          {trade.execType === 'M' ? 'Maker' : 'Taker'}
+                        <span className={`order-status ${stateClass}`}>
+                          {formatState(order.state)}
                         </span>
                       </td>
                     </tr>

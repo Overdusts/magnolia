@@ -2,67 +2,100 @@ import React from 'react';
 
 function fmt(value, decimals = 2) {
   const num = parseFloat(value);
-  if (isNaN(num)) return '—';
+  if (isNaN(num)) return '0.00';
   return num.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
 }
 
-function PnlValue({ value }) {
-  const num = parseFloat(value);
-  if (isNaN(num)) return <span className="mono">—</span>;
-  const cls = num >= 0 ? 'profit' : 'loss';
-  const prefix = num >= 0 ? '+' : '';
-  return <span className={`mono ${cls}`}>{prefix}{fmt(num)}</span>;
-}
-
 export default function BalanceCard({ balance }) {
   if (!balance) {
     return (
-      <div className="card balance-card">
-        <h2 className="card-title">Account Balance</h2>
-        <p className="empty-state">No balance data</p>
+      <div className="balance-section">
+        <div className="balance-hero">
+          <div className="balance-hero-label">Total Equity</div>
+          <div className="balance-hero-value">$0.00</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No balance data available</p>
+        </div>
       </div>
     );
   }
 
-  // balance can be an object or array with one item
   const data = Array.isArray(balance) ? balance[0] : balance;
   const details = data?.details || [];
+  const totalEquity = parseFloat(data?.totalEquity) || 0;
+  const isolatedEquity = parseFloat(data?.isolatedEquity) || 0;
+
+  const totalAvailable = details.reduce((s, d) => s + (parseFloat(d.available) || 0), 0);
+  const totalFrozen = details.reduce((s, d) => s + (parseFloat(d.frozen) || 0), 0);
+  const totalUPnl = details.reduce((s, d) => s + (parseFloat(d.isolatedUnrealizedPnl) || 0), 0);
 
   return (
-    <div className="card balance-card">
-      <h2 className="card-title">Account Balance</h2>
-      <div className="balance-grid">
-        <div className="balance-item">
-          <span className="label">Total Equity</span>
-          <span className="value mono">${fmt(data?.totalEquity)}</span>
+    <div className="balance-section">
+      <div className="balance-hero">
+        <div className="balance-hero-label">Total Equity</div>
+        <div className="balance-hero-value">${fmt(totalEquity)}</div>
+        <div className="balance-details-grid">
+          <div className="balance-detail">
+            <div className="detail-label">Isolated Equity</div>
+            <div className="detail-value">${fmt(isolatedEquity)}</div>
+          </div>
+          <div className="balance-detail">
+            <div className="detail-label">Available</div>
+            <div className="detail-value">${fmt(totalAvailable)}</div>
+          </div>
+          <div className="balance-detail">
+            <div className="detail-label">Frozen</div>
+            <div className="detail-value">${fmt(totalFrozen)}</div>
+          </div>
+          <div className="balance-detail">
+            <div className="detail-label">Unrealized PnL</div>
+            <div className={`detail-value ${totalUPnl >= 0 ? 'profit' : 'loss'}`}>
+              {totalUPnl >= 0 ? '+' : ''}{fmt(totalUPnl)}
+            </div>
+          </div>
         </div>
-        <div className="balance-item">
-          <span className="label">Isolated Equity</span>
-          <span className="value mono">${fmt(data?.isolatedEquity)}</span>
+      </div>
+
+      <div className="currency-breakdown">
+        <div className="card-header">
+          <h2 className="card-title">
+            Currency Breakdown
+            <span className="badge">{details.length}</span>
+          </h2>
         </div>
-        {details.map((d, i) => (
-          <React.Fragment key={i}>
-            <div className="balance-item">
-              <span className="label">{d.currency} Balance</span>
-              <span className="value mono">{fmt(d.balance)}</span>
+        <div className="currency-list">
+          {details.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">$</div>
+              No currencies found
             </div>
-            <div className="balance-item">
-              <span className="label">{d.currency} Available</span>
-              <span className="value mono">{fmt(d.available)}</span>
-            </div>
-            <div className="balance-item">
-              <span className="label">{d.currency} Equity (USD)</span>
-              <span className="value mono">${fmt(d.equityUsd)}</span>
-            </div>
-            <div className="balance-item">
-              <span className="label">{d.currency} Unrealized PnL</span>
-              <PnlValue value={d.isolatedUnrealizedPnl} />
-            </div>
-          </React.Fragment>
-        ))}
+          ) : (
+            details.map((d, i) => {
+              const upnl = parseFloat(d.isolatedUnrealizedPnl) || 0;
+              return (
+                <div key={i} className="currency-item">
+                  <div className="currency-left">
+                    <div className="currency-icon">{(d.currency || '?').slice(0, 3)}</div>
+                    <div>
+                      <div className="currency-name">{d.currency}</div>
+                      <div className="currency-sub">
+                        Available: {fmt(d.available)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="currency-right">
+                    <div className="currency-balance mono">{fmt(d.balance)}</div>
+                    <div className={`currency-usd ${upnl >= 0 ? 'profit' : 'loss'}`}>
+                      uPnL: {upnl >= 0 ? '+' : ''}{fmt(upnl)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
