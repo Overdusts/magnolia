@@ -8,25 +8,27 @@ import StatsRow from './StatsRow';
 export default function Dashboard({ balance, positions, trades, orders, loading, activeTab }) {
   if (loading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-logo">magnolia</div>
-        <div className="spinner-ring" />
-        <p className="loading-text">Connecting to BloFin...</p>
+      <div className="flex flex-col items-center justify-center h-[70vh] gap-5">
+        <div className="text-4xl font-extrabold bg-gradient-to-br from-accent-bright via-accent to-indigo-400 bg-clip-text text-transparent tracking-tight">
+          magnolia
+        </div>
+        <div className="w-10 h-10 border-3 border-border border-t-accent rounded-full animate-spin" />
+        <p className="text-[13px] text-txt-muted font-medium">Connecting to BloFin...</p>
       </div>
     );
   }
 
   return (
-    <main className="dashboard">
+    <main className="px-8 py-7 flex flex-col gap-6 max-w-[1520px] mx-auto w-full">
       {activeTab === 'overview' && (
         <>
-          <div className="fade-in">
+          <div className="animate-fade-in">
             <StatsRow balance={balance} positions={positions} trades={trades} />
           </div>
-          <div className="fade-in fade-in-delay-1">
+          <div className="animate-fade-in-d1">
             <BalanceCard balance={balance} />
           </div>
-          <div className="two-col fade-in fade-in-delay-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-fade-in-d2">
             <PositionsTable positions={positions} compact />
             <TradesTable trades={trades} compact />
           </div>
@@ -34,19 +36,19 @@ export default function Dashboard({ balance, positions, trades, orders, loading,
       )}
 
       {activeTab === 'positions' && (
-        <div className="fade-in">
+        <div className="animate-fade-in">
           <PositionsTable positions={positions} />
         </div>
       )}
 
       {activeTab === 'trades' && (
-        <div className="fade-in">
+        <div className="animate-fade-in">
           <TradesTable trades={trades} />
         </div>
       )}
 
       {activeTab === 'orders' && (
-        <div className="fade-in">
+        <div className="animate-fade-in">
           <OrdersTable orders={orders} />
         </div>
       )}
