@@ -12,12 +12,17 @@ app.use(express.json());
 
 app.use('/api', apiRoutes);
 
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('[API Error]', err.message);
+  console.error(`[API Error] ${new Date().toISOString()} - ${req.method} ${req.path}:`, err.message);
   const status = err.response?.status || 500;
   const message = err.response?.data?.msg || err.message || 'Internal server error';
-  res.status(status).json({ error: message });
+  res.status(status).json({ error: message, path: req.path, timestamp: Date.now() });
 });
 
 // Serve frontend in production
